@@ -30,6 +30,9 @@
 #define IDM_MOSAIC                      32783
 #define ID_32784                        32784
 #define ID_32785                        32785
+#define ID_32786                        32786
+#define ID_ICHIMATSU                    32787
+#define IDM_ICHIMATSU                   32788
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -38,7 +41,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        132
-#define _APS_NEXT_COMMAND_VALUE         32786
+#define _APS_NEXT_COMMAND_VALUE         32789
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
