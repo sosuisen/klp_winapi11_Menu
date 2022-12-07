@@ -139,6 +139,7 @@
     <ResourceCompile Include="Menu.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="kyocotan.bmp" />
     <Image Include="Menu.ico" />
     <Image Include="small.ico" />
   </ItemGroup>

@@ -1,9 +1,17 @@
 ﻿#include <windows.h>
+#include "menu.h"
 #include <string>
 #include <chrono>
 
 static const int WIN_WIDTH = 1000;
 static const int WIN_HEIGHT = 500;
+
+static const int FILTER_X = 600;
+static const int FILTER_Y = 100;
+static const int FILTER_WIDTH = 240;
+static const int FILTER_HEIGHT = 240;
+
+static HINSTANCE hInst;
 
 LRESULT CALLBACK WndProc(
     HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -11,6 +19,8 @@ LRESULT CALLBACK WndProc(
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
+    hInst = hInstance;
+
     TCHAR szAppName[] = L"BitmapApp";
     WNDCLASS wc;
     HWND hwnd;
@@ -25,7 +35,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    wc.lpszMenuName = NULL;
+    // ここでメニューのリソース名を指定
+    wc.lpszMenuName = MAKEINTRESOURCEW(IDR_MENU1);
     wc.lpszClassName = szAppName;
 
     // ウィンドウクラスを登録
@@ -126,6 +137,17 @@ COLORREF avr5x5Filter(HDC hMemDC, int x, int y) {
     return RGB(r, g, b);
 }
 
+COLORREF ichimatsuFilter(HDC hMemDC, int orgX, int orgY) {
+    if ((orgX % 4 < 2 && orgY % 4 < 2)
+        || (orgX % 4 >= 2 && orgY % 4 >= 2)
+        ) {
+        return RGB(255, 0, 0);
+    }
+    else {
+        return RGB(255, 255, 255);
+    }
+}
+
 COLORREF mosaic5x5Filter(HDC hMemDC, int orgX, int orgY) {
     int x = orgX - orgX % 5;
     int y = orgY - orgY % 5;
@@ -187,20 +209,29 @@ COLORREF grayFilter(HDC hMemDC, int x, int y) {
     return RGB(gray, gray, gray);
 }
 
+void applyFilter(HDC hMemDC, HDC hMemFilterDC, COLORREF (*filterFunc)(HDC, int, int)) {
+    // いろいろなフィルタ処理
+    for (int x = FILTER_X; x < FILTER_X + FILTER_WIDTH; x++) {
+        for (int y = FILTER_Y; y < FILTER_Y + FILTER_HEIGHT; y++) {            
+            SetPixelV(hMemFilterDC, x - FILTER_X, y - FILTER_Y, (*filterFunc)(hMemDC, x, y));
+        }
+    }
+    BitBlt(hMemDC, FILTER_X, FILTER_Y, FILTER_WIDTH, FILTER_HEIGHT,
+        hMemFilterDC, 0, 0, SRCCOPY);
+}
+
+
 LRESULT CALLBACK WndProc(
     HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     static HBITMAP  hBitmap;    // ビットマップ
     static HDC      hMemDC;     // オフスクリーン
     static BITMAP bmp_info = { 0 };
-
     static HDC hMemFilterDC;
     static HBITMAP hBitmapFilter;
 
-    int FILTER_X = 600;
-    int FILTER_Y = 100;
-    int FILTER_WIDTH = 240;
-    int FILTER_HEIGHT = 240;
+    HMENU hMenu, hSubMenu;
+    POINT pt;
 
     HDC hdc;
 
@@ -209,16 +240,52 @@ LRESULT CALLBACK WndProc(
     long microsec = 0;
 
     switch (uMsg) {
-    case WM_CREATE:
-        // ベンチマーク開始
-        start = std::chrono::system_clock::now();
+    case WM_COMMAND:
+        switch (LOWORD(wParam)) {
+        case IDM_EXIT:
+            SendMessage(hwnd, WM_CLOSE, 0, 0);
+            break;
+        case IDM_33BLUR:
+            // 3x3平均
+            applyFilter(hMemDC, hMemFilterDC, &avr3x3Filter);
+            InvalidateRect(hwnd, NULL, true);
+            break;
+        case IDM_55BLUR:
+            // 5x5平均
+            applyFilter(hMemDC, hMemFilterDC, &avr5x5Filter);
+            InvalidateRect(hwnd, NULL, true);
+            break;
+        case IDM_GRAY:
+            // グレースケール化
+            applyFilter(hMemDC, hMemFilterDC, &grayFilter);
+            InvalidateRect(hwnd, NULL, true);
+            break;
+        case IDM_MOSAIC:
+            // 5x5のモザイク
+            applyFilter(hMemDC, hMemFilterDC, &mosaic5x5Filter);
+            InvalidateRect(hwnd, NULL, true);
+            break;
+        default: 
+            return (DefWindowProc(hwnd,uMsg, wParam, lParam));
+        }
+        break;
+    case WM_RBUTTONDOWN:
+        hMenu = LoadMenu(hInst, MAKEINTRESOURCE(IDR_MENU2));
+        hSubMenu = GetSubMenu(hMenu, 0);
+        pt.x = LOWORD(lParam);
+        pt.y = HIWORD(lParam);
+        ClientToScreen(hwnd, &pt);
+        TrackPopupMenu(hSubMenu, TPM_LEFTALIGN, pt.x, pt.y, 0, hwnd, NULL);
+        DestroyMenu(hMenu);
 
+        break;
+    case WM_CREATE:
         // オフスクリーンをメモリデバイスコンテキストを用いて作成
         hdc = GetDC(hwnd);
         hMemDC = CreateCompatibleDC(hdc);
-        // 画像をファイルから読み込む
+        // 画像をリソースファイルから読み込む
 
-        hBitmap = (HBITMAP)LoadImage(NULL, L"kyocotan.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+        hBitmap = (HBITMAP)LoadImage(hInst, MAKEINTRESOURCE(IDB_BITMAP1), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
         // ビットマップの情報を取得し、bmp_infoに保管
         GetObject(hBitmap, (int)sizeof(BITMAP), &bmp_info);
         SelectObject(hMemDC, hBitmap);
@@ -227,32 +294,6 @@ LRESULT CALLBACK WndProc(
         hMemFilterDC = CreateCompatibleDC(hdc);
         hBitmapFilter = CreateCompatibleBitmap(hdc, FILTER_WIDTH, FILTER_HEIGHT);
         SelectObject(hMemFilterDC, hBitmapFilter);
-
-        // いろいろなフィルタ処理
-        for (int x = FILTER_X; x < FILTER_X + FILTER_WIDTH; x++) {
-            for (int y = FILTER_Y; y < FILTER_Y + FILTER_HEIGHT; y++) {
-                // 3x3平均
-                //SetPixelV(hMemFilterDC, x - FILTER_X, y - FILTER_Y, avr3x3Filter(hMemDC, x, y));
-
-                // 5x5平均
-                // SetPixelV(hMemFilterDC, x - FILTER_X, y - FILTER_Y, avr5x5Filter(hMemDC, x, y));
-
-                // グレースケール化
-                // SetPixelV(hMemFilterDC, x - FILTER_X, y - FILTER_Y, grayFilter(hMemDC, x, y));
-
-                // 発展課題：5x5のモザイク
-                SetPixelV(hMemFilterDC, x - FILTER_X, y - FILTER_Y, mosaic5x5Filter(hMemDC, x, y));
-            }
-        }
-        BitBlt(hMemDC, FILTER_X, FILTER_Y, FILTER_WIDTH, FILTER_HEIGHT,
-            hMemFilterDC, 0, 0, SRCCOPY);
-
-
-        // ベンチマーク終了
-        end = std::chrono::system_clock::now();
-        microsec = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-        OutputDebugString((std::to_wstring(microsec) + L"\n").c_str());
-
 
         ReleaseDC(hwnd, hdc);
         return 0;

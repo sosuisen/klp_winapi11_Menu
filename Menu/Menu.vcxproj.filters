@@ -45,5 +45,8 @@
     <Image Include="Menu.ico">
       <Filter>リソース ファイル</Filter>
     </Image>
+    <Image Include="kyocotan.bmp">
+      <Filter>リソース ファイル</Filter>
+    </Image>
   </ItemGroup>
 </Project>
