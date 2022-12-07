@@ -313,7 +313,6 @@ LRESULT CALLBACK WndProc(
         RECT rc;
         GetClientRect(hwnd, &rc); // クライアント領域のサイズ
 
-        /*
         BitBlt(
             hdc,
             0,
@@ -324,46 +323,6 @@ LRESULT CALLBACK WndProc(
             0,
             0,
             SRCCOPY);
-        */
-
-        int width = rc.right - rc.left;
-        int height = rc.bottom - rc.top;
-
-        int imgW = bmp_info.bmWidth;
-        int imgH = bmp_info.bmHeight;
-
-        int newImgW = 0;
-        int newImgH = 0;
-        int xOffset = 0;
-        int yOffset = 0;
-        // 画像の幅をウィンドウの幅に合わせた場合
-        if ((double)width / (double)imgW * imgH > height) {
-            // 画像の高さに合わせる必要あり
-            newImgH = height;
-            newImgW = (double)height / (double)imgH * imgW;
-            xOffset = (width - newImgW) / 2;
-        }
-        else {
-            // 画像の幅に合わせる必要あり
-            newImgW = width;
-            newImgH = (double)width / (double)imgW * imgH;
-            yOffset = (height - newImgH) / 2;
-        }
-
-        StretchBlt(
-            hdc,
-            xOffset,
-            yOffset,
-            newImgW,
-            newImgH,
-            hMemDC,
-            0,
-            0,
-            imgW,
-            imgH,
-            SRCCOPY
-        );
-
 
         EndPaint(hwnd, &paint);
 
