@@ -231,7 +231,7 @@ LRESULT CALLBACK WndProc(
     static HBITMAP hBitmapFilter;
 
     HMENU hMenu, hSubMenu;
-    POINT pt;
+    static POINT pt, clientPt;
 
     HDC hdc;
 
@@ -265,15 +265,25 @@ LRESULT CALLBACK WndProc(
             applyFilter(hMemDC, hMemFilterDC, &mosaic5x5Filter);
             InvalidateRect(hwnd, NULL, true);
             break;
-        default: 
+        case IDM_GETCOLOR: {
+            hdc = GetDC(hwnd);
+            COLORREF col = GetPixel(hdc, clientPt.x, clientPt.y);
+            std::wstring colstr = L"RGB="
+                + std::to_wstring(GetRValue(col)) + L","
+                + std::to_wstring(GetGValue(col)) + L","
+                + std::to_wstring(GetBValue(col));
+            MessageBox(hwnd, colstr.c_str(), L"この点の色", MB_OK);
+            break;
+        }
+        default:
             return (DefWindowProc(hwnd,uMsg, wParam, lParam));
         }
         break;
     case WM_RBUTTONDOWN:
         hMenu = LoadMenu(hInst, MAKEINTRESOURCE(IDR_MENU2));
         hSubMenu = GetSubMenu(hMenu, 0);
-        pt.x = LOWORD(lParam);
-        pt.y = HIWORD(lParam);
+        pt.x = clientPt.x = LOWORD(lParam);
+        pt.y = clientPt.y = HIWORD(lParam);
         ClientToScreen(hwnd, &pt);
         TrackPopupMenu(hSubMenu, TPM_LEFTALIGN, pt.x, pt.y, 0, hwnd, NULL);
         DestroyMenu(hMenu);
