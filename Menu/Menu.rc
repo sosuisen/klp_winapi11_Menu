@@ -52,6 +52,36 @@ END
 
 IDB_BITMAP1             BITMAP                  ".\\kyocotan.bmp"
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU1 MENU
+BEGIN
+    POPUP "ファイル"
+    BEGIN
+        MENUITEM "終了",                          IDM_EXIT
+    END
+    POPUP "フィルタ"
+    BEGIN
+        MENUITEM "3x3ぼかし",                      IDM_33BLUR
+        MENUITEM "5x5ぼかし",                      IDM_55BLUR
+        MENUITEM "グレースケール",                     IDM_GRAY
+        MENUITEM "モザイク",                        IDM_MOSAIC
+    END
+END
+
+IDR_MENU2 MENU
+BEGIN
+    POPUP "ダミーです"
+    BEGIN
+        MENUITEM "ポップアップ１",                     ID_40011
+        MENUITEM "ポップアップ２",                     ID_40012
+    END
+END
+
 #endif    // 日本語 (日本) resources
 /////////////////////////////////////////////////////////////////////////////
 
