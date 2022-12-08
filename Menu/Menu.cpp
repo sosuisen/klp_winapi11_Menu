@@ -1,7 +1,6 @@
 ﻿#include <windows.h>
-#include "menu.h"
+#include "resource.h"
 #include <string>
-#include <chrono>
 
 static const int WIN_WIDTH = 1000;
 static const int WIN_HEIGHT = 500;
@@ -21,7 +20,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 {
     hInst = hInstance;
 
-    TCHAR szAppName[] = L"BitmapApp";
+    TCHAR szAppName[] = L"MenuApp";
     WNDCLASS wc;
     HWND hwnd;
     MSG msg;
@@ -35,8 +34,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    // ここでメニューのリソース名を指定
-    wc.lpszMenuName = MAKEINTRESOURCEW(IDR_MENU1);
+    wc.lpszMenuName = 0;
     wc.lpszClassName = szAppName;
 
     // ウィンドウクラスを登録
@@ -209,10 +207,10 @@ COLORREF grayFilter(HDC hMemDC, int x, int y) {
     return RGB(gray, gray, gray);
 }
 
-void applyFilter(HDC hMemDC, HDC hMemFilterDC, COLORREF (*filterFunc)(HDC, int, int)) {
+void applyFilter(HDC hMemDC, HDC hMemFilterDC, COLORREF(*filterFunc)(HDC, int, int)) {
     // いろいろなフィルタ処理
     for (int x = FILTER_X; x < FILTER_X + FILTER_WIDTH; x++) {
-        for (int y = FILTER_Y; y < FILTER_Y + FILTER_HEIGHT; y++) {            
+        for (int y = FILTER_Y; y < FILTER_Y + FILTER_HEIGHT; y++) {
             SetPixelV(hMemFilterDC, x - FILTER_X, y - FILTER_Y, (*filterFunc)(hMemDC, x, y));
         }
     }
@@ -230,55 +228,9 @@ LRESULT CALLBACK WndProc(
     static HDC hMemFilterDC;
     static HBITMAP hBitmapFilter;
 
-    HMENU hMenu, hSubMenu;
-    POINT pt;
-
     HDC hdc;
 
-    // benchmark
-    std::chrono::system_clock::time_point start, end;
-    long microsec = 0;
-
     switch (uMsg) {
-    case WM_COMMAND:
-        switch (LOWORD(wParam)) {
-        case IDM_EXIT:
-            SendMessage(hwnd, WM_CLOSE, 0, 0);
-            break;
-        case IDM_33BLUR:
-            // 3x3平均
-            applyFilter(hMemDC, hMemFilterDC, &avr3x3Filter);
-            InvalidateRect(hwnd, NULL, true);
-            break;
-        case IDM_55BLUR:
-            // 5x5平均
-            applyFilter(hMemDC, hMemFilterDC, &avr5x5Filter);
-            InvalidateRect(hwnd, NULL, true);
-            break;
-        case IDM_GRAY:
-            // グレースケール化
-            applyFilter(hMemDC, hMemFilterDC, &grayFilter);
-            InvalidateRect(hwnd, NULL, true);
-            break;
-        case IDM_MOSAIC:
-            // 5x5のモザイク
-            applyFilter(hMemDC, hMemFilterDC, &mosaic5x5Filter);
-            InvalidateRect(hwnd, NULL, true);
-            break;
-        default: 
-            return (DefWindowProc(hwnd,uMsg, wParam, lParam));
-        }
-        break;
-    case WM_RBUTTONDOWN:
-        hMenu = LoadMenu(hInst, MAKEINTRESOURCE(IDR_MENU2));
-        hSubMenu = GetSubMenu(hMenu, 0);
-        pt.x = LOWORD(lParam);
-        pt.y = HIWORD(lParam);
-        ClientToScreen(hwnd, &pt);
-        TrackPopupMenu(hSubMenu, TPM_LEFTALIGN, pt.x, pt.y, 0, hwnd, NULL);
-        DestroyMenu(hMenu);
-
-        break;
     case WM_CREATE:
         // オフスクリーンをメモリデバイスコンテキストを用いて作成
         hdc = GetDC(hwnd);

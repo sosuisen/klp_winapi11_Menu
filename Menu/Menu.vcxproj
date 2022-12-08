@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{9bd83de2-ac53-411b-bebf-f267be8338c7}</ProjectGuid>
+    <ProjectGuid>{fb270ece-0a6e-4648-94e1-3b528b7bc948}</ProjectGuid>
     <RootNamespace>Menu</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -127,21 +127,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="framework.h" />
-    <ClInclude Include="Menu.h" />
-    <ClInclude Include="Resource.h" />
-    <ClInclude Include="targetver.h" />
+    <ClCompile Include="Menu.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Menu.cpp" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Menu.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="kyocotan.bmp" />
-    <Image Include="Menu.ico" />
-    <Image Include="small.ico" />
+    <Image Include=".\kyocotan.bmp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
